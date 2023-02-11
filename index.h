@@ -1,3 +1,4 @@
+const char index_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -371,3 +372,4 @@
     </script>        
 </body>
 </html>
+)rawliteral";
