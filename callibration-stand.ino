@@ -4,11 +4,11 @@
 #include "index.h"
 #include "HX711.h"
 
-#define DT  16
-#define SCK 4
+#define DT  4
+#define SCK 16
 #define INA 18
 #define INB 19
-#define OP  15
+#define OP  14
 
 
 TaskHandle_t Task1;
@@ -102,9 +102,11 @@ void setPower(uint8_t p) {
   power = p;
   if(power == 0) { // выключаем
     goToZeroPoint();
+    count = 0;
   }
   if(power == 1) { // включаем
     setRotationVector();
+    count = 0;
   }
 }
 
@@ -140,7 +142,6 @@ void setWorkMode(uint8_t m) {
   workMode = m;
   goToZeroPoint();
   count = 0;
-  Serial.println("mode: " + String(workMode));
   delay(500);
   switch(workMode) {
     case 0: 
@@ -177,7 +178,9 @@ void speedCalculate(void * pvParameters) {
         motorSpeed = (((double)360/spaces)/
                      ((micros() - micPrev)/
                      1000000.0000000000))/360;
-        count++;     
+        if(micros() - micPrev > 550) {
+          count++;
+        }   
       }
     }
   }
@@ -213,13 +216,11 @@ void goToZeroPoint() {
   if(rotationVector == 0) turnReverse();
   if(rotationVector == 1) turnAverse();
   while(count % (spaces*3) != 0) {
-    Serial.println("L " + String(count));
     delay(1);
   }
   stop();
   motorSpeedRange = motorSecondSpeedRange;
 }
-
 
 
 
@@ -232,21 +233,29 @@ void mode0() {
 }
 void mode1() {
   setRotationVector(1);
-  while(count%(20*3) != 0) {}
+  while(count%(spaces*3) != 0) {
+    delay(1);
+  }
   speedToZero();
   stop();
 }
 void mode2() {
   setRotationVector(0);
-  while(count%(20*3) != 0) {}
+  while(count%(spaces*3) != 0) {
+    delay(1);
+  }
   speedToZero();
   stop();
 }
 void mode3() {
   setRotationVector(1);
-  while(count%(10*3) != 0) {}
+  while(count%(spaces*3) != 0) {
+    delay(1);
+  }
+  stop();
+  delay(2000);
   setRotationVector(0);
-  while(count%(20*3) != 0) {}
+  for(count; count%(spaces*2*3) != 0; delay(1)) {}
   speedToZero();
   stop();
 }
@@ -303,4 +312,3 @@ void loop() {
   dns.processNextRequest();
   server.handleClient();
 }
-
